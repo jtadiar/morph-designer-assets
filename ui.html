@@ -1,92 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', sans-serif;
+      margin: 0;
       padding: 20px;
-      background: #ffffff;
-      color: #21231e;
+      background: #1e1e1e;
+      color: #f0f0f0;
     }
 
     h2 {
-      font-size: 22px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      color: #7EBEC5;
     }
 
     label {
       display: block;
-      margin-top: 15px;
-      font-weight: 600;
+      margin-top: 20px;
       font-size: 14px;
     }
 
-    input, select {
+    select, input[type="color"] {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
+      padding: 8px;
+      margin-top: 6px;
+      border: none;
       border-radius: 6px;
+      background-color: #2b2b2b;
+      color: #ffffff;
       font-size: 14px;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .row {
-      display: flex;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .row input {
-      flex: 1;
     }
 
     button {
-      width: 100%;
+      margin-top: 24px;
       padding: 12px;
-      background-color: #14a800;
-      color: white;
+      width: 100%;
+      background: #7EBEC5;
+      color: #000;
+      font-weight: bold;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      margin-top: 24px;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #119900;
+      background: #65a8af;
     }
   </style>
 </head>
 <body>
-  <h2>Morph Designer Agent</h2>
+  <h2>🧠 Morph Designer Agent</h2>
 
-  <label>Headline</label>
-  <input id="headline" placeholder="E.g. New Drop This Friday" />
-
-  <label>Subtext</label>
-  <input id="subtext" placeholder="E.g. Free Mint Giveaway" />
-
-  <div class="row">
-    <div>
-      <label>BG Color</label>
-      <input id="bgColor" value="#f3f7f2" />
-    </div>
-    <div>
-      <label>Subtext Color</label>
-      <input id="subtextColor" value="#21231e" />
-    </div>
-  </div>
-
-  <label>Image</label>
+  <label for="imageSelect">Select Morphy Image</label>
   <select id="imageSelect">
-    <option value="dj-a.png">DJ A</option>
-    <option value="dj-b.png">DJ B</option>
-    <option value="logo.png">Logo</option>
-    <option value="speaker.png">Speaker</option>
+    <option>Dev Morphy.png</option>
+    <option>Drummer Morphy.png</option>
+    <option>Filmmaker Morphy.png</option>
+    <option>Gardening Morphy.png</option>
+    <option>Guitar Morphy.png</option>
+    <option>Hacker Morphy.png</option>
+    <option>Muscle Morphy.png</option>
+    <option>Paint Morphy.png</option>
+    <option>Poker Morphy.png</option>
+    <option>Rocket Morphy.png</option>
+    <option>Sleeping Morphy.png</option>
+    <option>Surfing Morphy.png</option>
+    <option>Telescope Morphy.png</option>
+    <option>UFO Morphy.png</option>
+    <option>Uncle Sam Morphy.png</option>
   </select>
 
-  <butto
+  <label for="bgColor">Background Color</label>
+  <input type="color" id="bgColor" value="#f8fdf9" />
+
+  <label for="subTextColor">Sub Text Color</label>
+  <input type="color" id="subTextColor" value="#222222" />
+
+  <button id="apply">✨ Apply to Template</button>
+
+  <script>
+    document.getElementById('apply').onclick = () => {
+      const image = document.getElementById('imageSelect').value;
+      const bgColor = document.getElementById('bgColor').value;
+      const subTextColor = document.getElementById('subTextColor').value;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'apply-template',
+          imageName: image,
+          bgColor,
+          subTextColor
+        }
+      }, '*');
+    };
+  </script>
+</body>
+</html>

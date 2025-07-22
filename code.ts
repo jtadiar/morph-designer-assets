@@ -1,77 +1,55 @@
-figma.showUI(__html__, { width: 380, height: 520 });
+figma.showUI(__html__, { width: 300, height: 400 });
 
 figma.ui.onmessage = async (msg) => {
-  if (msg.type === 'generate') {
-    const { headline, subtext, bgColor, subtextColor, selectedImage } = msg;
+  if (msg.type === 'apply-template') {
+    const { imageName, bgColor, subTextColor } = msg;
 
-    const frame = figma.currentPage.findOne(node =>
+    // Find the template frame
+    const template = figma.currentPage.findOne(node =>
       node.type === 'FRAME' && node.name === '#template_1080x1350'
-    );
+    ) as FrameNode;
 
-    if (!frame) {
-      figma.notify("❌ Couldn't find the template frame.");
+    if (!template) {
+      figma.notify('❌ Template frame not found.');
       return;
     }
 
-    const headlineNode = frame.findOne(n => n.name === '#headline_text' && n.type === 'TEXT');
-    const subtextNode = frame.findOne(n => n.name === '#sub_text' && n.type === 'TEXT');
-    const backgroundNode = frame.findOne(n => n.name === '#background_color' && n.type === 'RECTANGLE');
-    const imageNode = frame.findOne(n => n.name === '#main_image' && n.type === 'RECTANGLE');
+    // Update background color
+    template.fills = [{ type: 'SOLID', color: hexToRgb(bgColor), opacity: 1 }];
 
-    if (!headlineNode || !subtextNode || !backgroundNode) {
-      figma.notify("❌ Required elements are missing.");
-      return;
+    // Update subtext color
+    const subText = template.findOne(node => node.name === 'Sub Text' && node.type === 'TEXT') as TextNode;
+    if (subText) {
+      await figma.loadFontAsync(subText.fontName as FontName);
+      subText.fills = [{ type: 'SOLID', color: hexToRgb(subTextColor), opacity: 1 }];
     }
 
-    await figma.loadFontAsync(headlineNode.fontName);
-    await figma.loadFontAsync(subtextNode.fontName);
-
-    // Headline
-    headlineNode.characters = headline;
-    headlineNode.textAutoResize = 'HEIGHT';
-    headlineNode.resizeWithoutConstraints(frame.width - 80, headlineNode.height);
-    headlineNode.fontSize = 160;
-
-    while (headlineNode.height > 220 && headlineNode.fontSize > 60) {
-      headlineNode.fontSize -= 2;
+    // Add image from GitHub
+    const imageUrl = `https://raw.githubusercontent.com/jtadiar/morph-designer-assets/main/images/${encodeURIComponent(imageName)}`;
+    try {
+      const imageBytes = await fetch(imageUrl).then(res => res.arrayBuffer());
+      const image = figma.createImage(new Uint8Array(imageBytes));
+      const imageNode = figma.createRectangle();
+      imageNode.resize(500, 500); // Adjust size as needed
+      imageNode.fills = [{ type: 'IMAGE', scaleMode: 'FIT', imageHash: image.hash }];
+      imageNode.name = 'Morphy Image';
+      imageNode.x = 290; // Position relative to your template
+      imageNode.y = 350;
+      template.appendChild(imageNode);
+    } catch (err) {
+      console.error('Image load error:', err);
+      figma.notify('⚠️ Could not load image.');
     }
 
-    // Subtext
-    subtextNode.characters = subtext;
-    subtextNode.fontSize = 48;
-    subtextNode.fills = [{ type: 'SOLID', color: hexToRgb(subtextColor) }];
-    subtextNode.textAlignHorizontal = 'CENTER';
-
-    // Background
-    backgroundNode.fills = [{ type: 'SOLID', color: hexToRgb(bgColor) }];
-
-    // Image
-    if (imageNode && selectedImage) {
-      try {
-        const img = await fetchImage(selectedImage);
-        imageNode.fills = [{
-          type: 'IMAGE',
-          scaleMode: 'FILL',
-          imageHash: img.hash,
-        }];
-      } catch (err) {
-        figma.notify('⚠️ Failed to load image');
-      }
-    }
-
-    figma.notify('✅ Post updated!');
+    figma.notify('✅ Template updated!');
+    figma.closePlugin();
   }
 };
 
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
+// Utility to convert hex to RGB (0–1 scale)
+function hexToRgb(hex: string): RGB {
+  const r = parseInt(hex.substring(1, 3), 16) / 255;
+  const g = parseInt(hex.substring(3, 5), 16) / 255;
+  const b = parseInt(hex.substring(5, 7), 16) / 255;
   return { r, g, b };
-}
-
-async function fetchImage(fileName) {
-  const response = await fetch(`images/${fileName}`);
-  const buffer = await response.arrayBuffer();
-  return figma.createImage(new Uint8Array(buffer));
 }
